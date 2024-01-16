@@ -17,7 +17,7 @@ type log = {
     objectUrl: string,
 }
 
-function formatTimeMillis (timeMillis: number) {
+function formatTimeMillis(timeMillis: number) {
     if (timeMillis < 1000) {
         return `${timeMillis}ms`;
     } else if (timeMillis < 60 * 1000) {
@@ -28,7 +28,7 @@ function formatTimeMillis (timeMillis: number) {
         let minutes = Math.floor(timeMillis / (60 * 1000));
         let seconds = Math.floor((timeMillis % (60 * 1000)) / 1000);
         let millis = timeMillis % 1000;
-            return `${minutes}m${seconds}.${String(millis).padStart(3, "0")}s`;
+        return `${minutes}m${seconds}.${String(millis).padStart(3, "0")}s`;
     }
 
 }
@@ -138,33 +138,33 @@ export default function app() {
                         "Encoding..." :
                         "Encode"}
                 </button>
-                {
-                    maybeAudioBuffer &&
-                    <label className="text-sm text-gray-600">Encode@<i>64kbps</i></label>
-                }
             </div>
-            <div className="border border-gray p-4">
-                <table className="w-full border-separate border-spacing-2 text-gray-600">
+            <div className="text-gray-600 space-y-1">
+                <h2>Encoding history</h2>
+                <table className="w-full border-separate border-spacing-2 border border-gray p-4">
                     <tbody>
-                        {logs.map((log, index) =>
-                            <tr key={index}>
-                                <td>#{index + 1}</td>
-                                <td>Encoded audio of <i>{log.audioLengthMins} minutes</i> in </td>
-                                <td><i className="text-gray-900">{formatTimeMillis(log.timeMillis)}</i></td>
-                                <td>
-                                    <button
-                                        className="border text-sm p-1"
-                                        onClick={_event => {
-                                            let downloadLink = document.createElement("a");
-                                            downloadLink.setAttribute("href", log.objectUrl);
-                                            downloadLink.setAttribute("download", "test.mp3");
-                                            document.body.appendChild(downloadLink);
-                                            downloadLink.click();
-                                            document.body.removeChild(downloadLink);
-                                        }}>Download</button>
-                                </td>
-                            </tr>
-                        )}
+                        {logs.length > 0 &&
+                            logs.map((log, index) =>
+                                <tr key={index}>
+                                    <td>#{index + 1}</td>
+                                    <td>Encoded audio of <i>{log.audioLengthMins} minutes</i> in </td>
+                                    <td><i className="text-gray-900">{formatTimeMillis(log.timeMillis)}</i></td>
+                                    <td>
+                                        <button
+                                            className="border text-sm p-1"
+                                            onClick={_event => {
+                                                let downloadLink = document.createElement("a");
+                                                downloadLink.setAttribute("href", log.objectUrl);
+                                                downloadLink.setAttribute("download", "test.mp3");
+                                                document.body.appendChild(downloadLink);
+                                                downloadLink.click();
+                                                document.body.removeChild(downloadLink);
+                                            }}>Download</button>
+                                    </td>
+                                </tr>
+                            ) ||
+                            <tr><td>You haven't encoded anything yet. Click on the "Encode" button to start.</td></tr>
+                            }
                     </tbody>
                 </table>
             </div>
