@@ -1,11 +1,11 @@
 import { Mp3Encoder } from "lamejstmp";
 
-export default async function (outputBuffer, kbps) {
-    const mp3encoder = new Mp3Encoder(outputBuffer.numberOfChannels, outputBuffer.sampleRate, kbps);
+export default async function (audioBuffer, kbps) {
+    const mp3encoder = new Mp3Encoder(audioBuffer.numberOfChannels, audioBuffer.sampleRate, kbps);
 
     let channels = [];
-    for (let i = 0; i < outputBuffer.numberOfChannels; i++) {
-        let channelData = outputBuffer.getChannelData(i);
+    for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+        let channelData = audioBuffer.getChannelData(i);
         let samples = new Int16Array(channelData.length);
         for (let j = 0; j < channelData.length; j++) {
             samples[j] = channelData[j] * 32767; // Convert float samples to 16-bit signed integer
