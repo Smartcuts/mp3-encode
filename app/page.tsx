@@ -17,6 +17,22 @@ type log = {
     objectUrl: string,
 }
 
+function formatTimeMillis (timeMillis: number) {
+    if (timeMillis < 1000) {
+        return `${timeMillis}ms`;
+    } else if (timeMillis < 60 * 1000) {
+        let seconds = Math.floor(timeMillis / 1000);
+        let millis = timeMillis % 1000;
+        return `${seconds}.${String(millis).padStart(3, "0")}ms`;
+    } else {
+        let minutes = Math.floor(timeMillis / (60 * 1000));
+        let seconds = Math.floor((timeMillis % (60 * 1000)) / 1000);
+        let millis = timeMillis % 1000;
+            return `${minutes}m${seconds}.${String(millis).padStart(3, "0")}s`;
+    }
+
+}
+
 export default function app() {
     let defaultAudioLengthKey = "4";
     let [audioLengthMins, setAudioLengthMins] = useState(() =>
@@ -78,32 +94,36 @@ export default function app() {
     let [logs, setLogs] = useState(() => [] as log[]);
 
     return (
-        <>
-            <div>
-                <input
-                    type="range"
-                    min="1" max="6"
-                    onChange={event => {
-                        let target = event.target as HTMLInputElement;
-                        let value = target.value;
-                        setAudioLengthMins(_ => audioLengthMinsLookupTable[value]!);
-                    }}
-                    defaultValue={defaultAudioLengthKey}
-                />
-                <span>Current audio sample size: </span>
-                {audioLengthMins}
-                <span> minutes</span>
+        <main className="max-w-prose m-auto my-20 p-6 space-y-5">
+            <div className="border border-gray p-4">
+                <label>Current audio sample length: </label>
+                <div className="flex flex-row space-x-5">
+                    <input
+                        className="grow"
+                        type="range"
+                        min="1" max="6"
+                        onChange={event => {
+                            let target = event.target as HTMLInputElement;
+                            let value = target.value;
+                            setAudioLengthMins(_ => audioLengthMinsLookupTable[value]!);
+                        }}
+                        defaultValue={defaultAudioLengthKey}
+                    />
+                    <span>
+                        {audioLengthMins} minutes
+                    </span>
+                </div>
             </div>
-            {
-                maybeAudioBuffer &&
+            <div className="flex flex-col space-y-2">
                 <button
-                    disabled={isEncoding}
+                    className="p-2 text-sm rounded border bg-blue-600 text-white disabled:opacity-50"
+                    disabled={!maybeAudioBuffer || isEncoding}
                     onClick={_event => {
                         let t1 = Date.now();
                         setIsEncoding(_ => true);
                         let _: Promise<void> = (async () => {
                             let audioBuffer = maybeAudioBuffer!;
-                            let mp3 = await mp3encode(audioBuffer, 64 /* kBps */);
+                            let mp3 = await mp3encode(audioBuffer, 64 /* kbps */);
                             let t2 = Date.now();
                             let timeMillis = t2 - t1;
                             let blob = new Blob([mp3], { type: "audio/mpeg" });
@@ -112,25 +132,42 @@ export default function app() {
                             setLogs(logs => logs.concat([{ audioLengthMins, timeMillis, objectUrl }]));
                         })();
                     }}
-                >
-                    {isEncoding ? "Encoding..." : "Encode"}
+                >{!maybeAudioBuffer ?
+                    "Loading source buffer..." :
+                    isEncoding ?
+                        "Encoding..." :
+                        "Encode"}
                 </button>
-            }
-            <div>
-                <ol>
-                    {logs.map((log, index) =>
-                        <li key={index}>
-                            <span>Encoded audio of {log.audioLengthMins} minutes in {log.timeMillis}ms</span>
-                            <button onClick={_event => {
-                                let downloadLink = document.createElement("a");
-                                downloadLink.setAttribute("href", log.objectUrl);
-                                downloadLink.setAttribute("download", "test.mp3");
-                                document.body.appendChild(downloadLink);
-                                downloadLink.click();
-                                document.body.removeChild(downloadLink);
-                            }}>Download</button>
-                        </li>
-                    )}</ol>
+                {
+                    maybeAudioBuffer &&
+                    <label className="text-sm text-gray-600">Encode@<i>64kbps</i></label>
+                }
             </div>
-        </>)
+            <div className="border border-gray p-4">
+                <table className="w-full border-separate border-spacing-2 text-gray-600">
+                    <tbody>
+                        {logs.map((log, index) =>
+                            <tr key={index}>
+                                <td>#{index + 1}</td>
+                                <td>Encoded audio of <i>{log.audioLengthMins} minutes</i> in </td>
+                                <td><i className="text-gray-900">{formatTimeMillis(log.timeMillis)}</i></td>
+                                <td>
+                                    <button
+                                        className="border text-sm p-1"
+                                        onClick={_event => {
+                                            let downloadLink = document.createElement("a");
+                                            downloadLink.setAttribute("href", log.objectUrl);
+                                            downloadLink.setAttribute("download", "test.mp3");
+                                            document.body.appendChild(downloadLink);
+                                            downloadLink.click();
+                                            document.body.removeChild(downloadLink);
+                                        }}>Download</button>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </main >
+    )
 }
